@@ -9,6 +9,9 @@ class WeakPtr {
 private:
     template <class U>
     friend class SharedPtr;
+    template <class U>
+    friend class WeakPtr;
+
     T* ptr_ = nullptr;
     ControlBlockBase* block_;
 
@@ -16,7 +19,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
 
-    WeakPtr() : ptr_(nullptr), block_(nullptr){};
+    WeakPtr() : ptr_(nullptr), block_(nullptr) {};
 
     WeakPtr(const WeakPtr& other) {
         ptr_ = other.ptr_;
@@ -31,7 +34,21 @@ public:
         other.ptr_ = nullptr;
         other.block_ = nullptr;
     };
-
+    template <class U>
+    WeakPtr(const WeakPtr<U>& other) {
+        ptr_ = other.ptr_;
+        block_ = other.block_;
+        if (block_) {
+            block_->ref_cnt_weak++;
+        }
+    }
+    template <class U>
+    WeakPtr(WeakPtr<U>&& other) {
+        ptr_ = other.ptr_;
+        block_ = other.block_;
+        other.ptr_ = nullptr;
+        other.block_ = nullptr;
+    }
     // Demote `SharedPtr`
     // #2 from https://en.cppreference.com/w/cpp/memory/weak_ptr/weak_ptr
     WeakPtr(const SharedPtr<T>& other) {
